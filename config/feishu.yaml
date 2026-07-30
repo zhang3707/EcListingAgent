@@ -1,0 +1,21 @@
+# 飞书应用与多维表格配置
+# 所有敏感字段通过 ${VAR} 从环境变量注入，禁止明文入库。
+
+app_id: "${FEISHU_APP_ID}"
+app_secret: "${FEISHU_APP_SECRET}"
+app_token: "${FEISHU_APP_TOKEN}"           # 多维表格应用标识
+table_id_task: "${FEISHU_TABLE_TASK}"      # 任务总表
+table_id_sku: "${FEISHU_TABLE_SKU}"        # SKU 明细表
+table_id_log: "${FEISHU_TABLE_LOG}"        # 日志表
+notify_chat_id: "${FEISHU_CHAT_ID}"        # 告警群
+
+# 字段映射（可选）：覆盖默认中文表头。缺省时用内置默认映射。
+# 多表/英文化表头场景下在此覆盖，避免改代码。
+# field_mapping:
+#   task:
+#     任务 ID: "task_id_col"
+#     上架状态: "status_col"
+#   log:
+#     日志 ID: "log_id_col"
+#   sku:
+#     SKU 规格: "sku_spec_col"

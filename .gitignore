@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# 环境
+.env
+.env.local
+
+# 运行时持久化（含 Cookie、指纹、checkpoint，含敏感态）
+data_persist/
+logs/
+!logs/.gitkeep
+
+# 模型与数据
+*.pt
+*.onnx
+*.engine
+scripts/datasets/
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# 系统
+.DS_Store
+Thumbs.db

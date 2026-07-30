@@ -1,0 +1,10 @@
+# 验证码相关配置
+slider_model: "data_persist/slider_gap_yolov8n.pt"   # YOLOv8 缺口检测模型路径
+max_slide_retry: 3
+max_login_per_day: 1
+sms_timeout_seconds: 300                              # 短信验证码 5 分钟超时
+
+# 风控熔断阈值（risk_guard 节点读取）
+risk:
+  max_captcha_per_session: 3                          # 单任务验证码失败累计上限
+  max_login_fail: 3                                   # 单任务登录失败累计上限

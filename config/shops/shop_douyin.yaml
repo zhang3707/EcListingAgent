@@ -1,0 +1,124 @@
+# 抖音 店铺配置（抖店 fxg.jinritemai）
+# platform: douyin 对应 DouyinListingSkill（iframe + 搜索类目 + 必填属性 + 承诺函）
+# 敏感字段用 ${VAR} 引用环境变量，禁止明文入库。
+
+shop_id: "shop_douyin"
+shop_name: "抖音示例店铺"
+platform: "douyin"
+base_url: "https://fxg.jinritemai.com"
+
+account:
+  username: "${DOUYIN_ACCOUNT}"
+  password: "${DOUYIN_PWD}"
+
+fingerprint:
+  profile_dir: "data_persist/browser_profiles/shop_douyin"
+
+proxy:
+  server: "${PROXY_SERVER}"
+  username: "${PROXY_USER}"
+  password: "${DOUYIN_PROXY_PWD}"
+
+price_strategy:
+  base: 0.0
+  markup_ratio: 1.40
+  promo: null
+
+feishu_notify:
+  chat_id: "${FEISHU_CHAT_ID}"
+  operator_id: "${FEISHU_OPERATOR_ID}"
+
+selectors:
+  login_url_pattern: "/login"
+  home_path: "/index.html"
+  sms_input: "input[name=mobileCode]"
+  sms_send_btn: ".send-sms-btn"
+  sms_submit: ".submit-btn"
+  slider_canvas: ".captcha-canvas"
+  slider_handle: ".slider-btn"
+  slider_piece: ".slider-piece"
+
+  # 登录流程（抖店默认扫码，需切换到密码登录）
+  login:
+    url: "https://fxg.jinritemai.com/login"
+    switch_tab_sel: "text=账号密码登录"
+    username_sel: "input[name=account]"
+    password_sel: "input[name=password]"
+    submit_sel: "button[type=submit]"
+
+  # 风控信号检测
+  risk:
+    restriction_selectors:
+      - ".shop-frozen-banner"
+      - ".account-limited-modal"
+      - ".risk-warning-dialog"
+    restriction_texts:
+      - "店铺已被冻结"
+      - "账号已被限制"
+      - "存在异常行为"
+      - "请验证身份"
+
+  # 上架流程配置（DouyinListingSkill 读取）
+  listing:
+    # 抖店发布表单在 iframe 内
+    form_iframe: "iframe[name=content-iframe], iframe.goods-create-frame"
+    publish_path: "/index.html#/ffa/cshop/goods/create"
+    list_path: "/index.html#/ffa/cshop/goods/list"
+
+    # 类目搜索选择（抖音属性表单加载较慢，dropdown_wait 设大）
+    category:
+      search_input: "input.cat-search"
+      next_btn: ".cat-next-btn"
+      dropdown_wait: 1.5
+      value: "服装/男装/T恤"
+
+    fields:
+      title:
+        selector: "input[name=goodsName]"
+        type: "input"
+        max: 30                          # 抖音标题 30 字
+      sellpoint:
+        selector: "textarea[name=subTitle]"
+        type: "textarea"
+        max: 100
+      detail:
+        selector: "textarea[name=desc]"
+        type: "textarea"
+        max: 5000
+      image_upload:
+        main:
+          selector: "input[type=file][accept*=image]"
+          multiple: true
+        detail:
+          selector: ".detail-upload input[type=file]"
+          multiple: true
+
+    # 双规格 SKU：颜色 + 尺码
+    sku:
+      add_spec_btn: "#addSkuSpec"
+      spec_name_1: "input.sku-spec-name-1"
+      spec_name_2: "input.sku-spec-name-2"
+      spec_values_1: "input.sku-spec-values-1"
+      spec_values_2: "input.sku-spec-values-2"
+      spec_names: ["颜色", "尺码"]
+      price: "input.sku-price"
+      stock: "input.sku-stock"
+
+    # 抖音特有：必填属性兜底（material.spec_params 中对应字段回填）
+    required_attrs:
+      品牌: "input[name=brand]"
+      产地: "input[name=origin]"
+      材质: "input[name=material]"
+
+    shipping:
+      selector: "#freight-tpl"
+      value: "默认运费模板"
+
+    submit_btn: "button[data-action=submit]"
+    # 抖音特有：提交前勾选承诺函
+    agree_checkbox: "#promise-checkbox"
+    list_verify:
+      item_row: ".goods-row"
+      item_title: ".goods-title"
+      item_status: ".goods-status"
+      success_status: "上架中"

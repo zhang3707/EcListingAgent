@@ -1,0 +1,115 @@
+# 淘宝/天猫 店铺配置（千牛工作台）
+# platform: taobao 对应 TaobaoListingSkill（iframe 表单 + 三级类目联动）
+# 敏感字段用 ${VAR} 引用环境变量，禁止明文入库。
+
+shop_id: "shop_taobao"
+shop_name: "淘宝示例店铺"
+platform: "taobao"
+base_url: "https://myseller.taobao.com"
+
+account:
+  username: "${TAOBAO_ACCOUNT}"
+  password: "${TAOBAO_PWD}"
+
+fingerprint:
+  profile_dir: "data_persist/browser_profiles/shop_taobao"
+
+proxy:
+  server: "${PROXY_SERVER}"
+  username: "${PROXY_USER}"
+  password: "${TAOBAO_PROXY_PWD}"
+
+price_strategy:
+  base: 0.0
+  markup_ratio: 1.35
+  promo: null
+
+feishu_notify:
+  chat_id: "${FEISHU_CHAT_ID}"
+  operator_id: "${FEISHU_OPERATOR_ID}"
+
+# ---- 平台选择器与字段映射 ----
+selectors:
+  login_url_pattern: "/login"
+  home_path: "/home"
+  sms_input: "input[name=smscode]"
+  sms_send_btn: "#sendSmsBtn"
+  sms_submit: "#submitBtn"
+  slider_canvas: "#nc_1_n1z"
+  slider_handle: ".nc_iconfont.btn_slide"
+  slider_piece: "#nc_1__scale_text"
+
+  # 登录流程（env_manager.login 读取）
+  login:
+    url: "https://login.taobao.com"
+    switch_tab_sel: "text=密码登录"
+    username_sel: "#fm-login-id"
+    password_sel: "#fm-login-password"
+    submit_sel: "#fm-login-submit"
+
+  # 风控信号检测（risk_guard 节点读取）
+  risk:
+    restriction_selectors:
+      - ".shop-frozen-banner"
+      - ".account-limited-tip"
+      - ".risk-warning-dialog"
+    restriction_texts:
+      - "账号已被限制"
+      - "店铺已被冻结"
+      - "存在异常行为"
+      - "请验证身份"
+      - "限制发布商品"
+
+  # 上架流程配置（TaobaoListingSkill 读取）
+  listing:
+    # 千牛发布表单常嵌在 content iframe 内
+    form_iframe: "iframe[name=baxia-dialog-content], iframe.content-iframe"
+    publish_path: "/seller-center/item/publish"
+    list_path: "/seller-center/item/list"
+
+    # 类目三级联动：level_selectors 对应一级/二级/三级的触发元素
+    category:
+      level_selectors:
+        - ".cat-level-1 .cat-item"
+        - ".cat-level-2 .cat-item"
+        - ".cat-level-3 .cat-item"
+      next_btn: ".cat-next-btn"
+      value: "服装/男装/T恤"
+
+    fields:
+      title:
+        selector: "input[name=title]"
+        type: "input"
+        max: 60
+      sellpoint:
+        selector: "textarea[name=sellpoint]"
+        type: "textarea"
+        max: 140
+      detail:
+        selector: "textarea[name=detail]"
+        type: "textarea"
+        max: 5000
+      image_upload:
+        main:
+          selector: "input[type=file][accept*=image]"
+          multiple: true
+        detail:
+          selector: ".detail-upload input[type=file]"
+          multiple: true
+
+    sku:
+      add_spec_btn: "#addSku"
+      spec_value: "input.sku-spec-value"
+      price: "input.sku-price"
+      stock: "input.sku-stock"
+
+    shipping:
+      selector: "#shipping-template"
+      value: "默认运费模板"
+
+    submit_btn: "button.submit"
+    list_verify:
+      item_row: ".item-row"
+      item_title: ".item-title"
+      item_status: ".item-status"
+      success_status: "上架中"

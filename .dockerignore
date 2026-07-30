@@ -1,0 +1,44 @@
+# 版本控制与 IDE
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+
+# Python 缓存与虚拟环境
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# 本地数据与持久化（容器内重新生成或挂载卷）
+data_persist/
+!data_persist/.gitkeep
+logs/
+*.log
+
+# 训练数据集与模型（体积大，CI 单独处理或挂载卷）
+scripts/datasets/
+data_persist/slider_gap_yolov8n*.pt
+data_persist/slider_gap_yolov8n/
+
+# 文档与测试（生产镜像不需要）
+Docs/
+tests/
+*.md
+!README.md
+
+# 环境变量与敏感配置（运行时通过 env_file 注入）
+.env
+.env.*
+!.env.example
+
+# Docker 自身
+Dockerfile
+docker-compose*.yml
+.dockerignore
+deploy/

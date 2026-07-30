@@ -1,0 +1,132 @@
+# 电商商品上下架智能 Agent 容器化编排
+#
+# 服务拓扑：
+#   postgres : 任务持久化 + LangGraph checkpointer
+#   minio    : 商品图片素材存储
+#   api      : FastAPI 接口层（任务提交/查询/回调）
+#   worker-* : 单店铺单容器隔离的执行 worker（通过 TARGET_SHOP 绑定）
+#
+# 多店铺隔离策略：
+#   - 每个店铺一个 worker 容器，独立 browser profile + 指纹
+#   - 共享 postgres/minio，数据归档统一
+#   - 新增店铺只需复制 worker-taobao 段并改 TARGET_SHOP + container_name
+#
+# 用法：
+#   docker compose up -d postgres minio api
+#   docker compose up -d worker-taobao worker-pinduoduo
+#   docker compose logs -f worker-taobao
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ec
+      POSTGRES_PASSWORD: ec
+      POSTGRES_DB: ecagent
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ec -d ecagent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ec-listing-agent:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - path: .env            # 生产期存放真实密钥；dev 期可缺失
+        required: false
+    environment:
+      PG_DSN: postgresql+psycopg://ec:ec@postgres:5432/ecagent
+      MINIO_ENDPOINT: minio:9000
+      HEADLESS: "true"
+      ROLE: api                 # entrypoint 据此初始化 DB + 启动 uvicorn
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- 单店铺 worker 模板 ----
+  # 每个 worker 绑定一个 TARGET_SHOP，独立 browser profile 卷
+  # 共享 postgres/minio/api 网络，任务由 API 提交后通过 DB 调度
+  worker-taobao:
+    image: ec-listing-agent:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PG_DSN: postgresql+psycopg://ec:ec@postgres:5432/ecagent
+      MINIO_ENDPOINT: minio:9000
+      HEADLESS: "true"
+      ROLE: worker
+      TARGET_SHOP: shop_taobao
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - taobao_profile:/app/data_persist/browser_profiles
+      - taobao_fingerprint:/app/data_persist/fingerprints
+    restart: unless-stopped
+
+  worker-pinduoduo:
+    image: ec-listing-agent:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PG_DSN: postgresql+psycopg://ec:ec@postgres:5432/ecagent
+      MINIO_ENDPOINT: minio:9000
+      HEADLESS: "true"
+      ROLE: worker
+      TARGET_SHOP: shop_pinduoduo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - pinduoduo_profile:/app/data_persist/browser_profiles
+      - pinduoduo_fingerprint:/app/data_persist/fingerprints
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  minio_data:
+  taobao_profile:
+  taobao_fingerprint:
+  pinduoduo_profile:
+  pinduoduo_fingerprint:

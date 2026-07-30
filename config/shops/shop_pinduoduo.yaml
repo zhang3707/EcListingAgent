@@ -1,0 +1,116 @@
+# 拼多多 店铺配置（拼多多商家后台 mms）
+# platform: pinduoduo 对应 PinduoduoListingSkill（搜索式类目 + 双规格 SKU + 承诺函）
+# 敏感字段用 ${VAR} 引用环境变量，禁止明文入库。
+
+shop_id: "shop_pinduoduo"
+shop_name: "拼多多示例店铺"
+platform: "pinduoduo"
+base_url: "https://mms.pinduoduo.com"
+
+account:
+  username: "${PDD_ACCOUNT}"
+  password: "${PDD_PWD}"
+
+fingerprint:
+  profile_dir: "data_persist/browser_profiles/shop_pinduoduo"
+
+proxy:
+  server: "${PROXY_SERVER}"
+  username: "${PROXY_USER}"
+  password: "${PDD_PROXY_PWD}"
+
+price_strategy:
+  base: 0.0
+  markup_ratio: 1.30
+  promo: null
+
+feishu_notify:
+  chat_id: "${FEISHU_CHAT_ID}"
+  operator_id: "${FEISHU_OPERATOR_ID}"
+
+selectors:
+  login_url_pattern: "/login"
+  home_path: "/index.html"
+  sms_input: "input[name=mobileCode]"
+  sms_send_btn: ".send-sms-btn"
+  sms_submit: ".submit-btn"
+  slider_canvas: ".captcha-canvas"
+  slider_handle: ".slider-btn"
+  slider_piece: ".slider-piece"
+
+  # 登录流程（拼多多默认账号密码 + 短信）
+  login:
+    url: "https://mms.pinduoduo.com/login.html"
+    switch_tab_sel: "text=密码登录"
+    username_sel: "input[name=account]"
+    password_sel: "input[name=password]"
+    submit_sel: "button[type=submit]"
+
+  # 风控信号检测
+  risk:
+    restriction_selectors:
+      - ".shop-frozen-tip"
+      - ".account-limited-mask"
+      - ".risk-warning-modal"
+    restriction_texts:
+      - "店铺已被冻结"
+      - "账号已被限制"
+      - "存在异常行为"
+      - "请验证身份"
+
+  # 上架流程配置（PinduoduoListingSkill 读取）
+  listing:
+    publish_path: "/goods/goods_create.html"
+    list_path: "/goods/goods_list.html"
+
+    # 类目搜索选择
+    category:
+      search_input: "input.cat-search"
+      next_btn: ".cat-next-btn"
+      dropdown_wait: 1.2
+      value: "服装/男装/T恤"
+
+    fields:
+      title:
+        selector: "input[name=goodsName]"
+        type: "input"
+        max: 60
+      sellpoint:
+        selector: "textarea[name=subTitle]"
+        type: "textarea"
+        max: 100
+      detail:
+        selector: "textarea[name=desc]"
+        type: "textarea"
+        max: 5000
+      image_upload:
+        main:
+          selector: "input[type=file][accept*=image]"
+          multiple: true
+        detail:
+          selector: ".detail-upload input[type=file]"
+          multiple: true
+
+    # 双规格 SKU：颜色 + 尺码
+    sku:
+      add_spec_btn: "#addSkuSpec"
+      spec_name_1: "input.sku-spec-name-1"
+      spec_name_2: "input.sku-spec-name-2"
+      spec_values_1: "input.sku-spec-values-1"
+      spec_values_2: "input.sku-spec-values-2"
+      spec_names: ["颜色", "尺码"]
+      price: "input.sku-price"
+      stock: "input.sku-stock"
+
+    shipping:
+      selector: "#freight-tpl"
+      value: "包邮模板"
+
+    submit_btn: "button[data-action=submit]"
+    # 拼多多特有：提交前勾选《商品承诺函》
+    agree_checkbox: "#promise-checkbox"
+    list_verify:
+      item_row: ".goods-row"
+      item_title: ".goods-title"
+      item_status: ".goods-status"
+      success_status: "上架中"

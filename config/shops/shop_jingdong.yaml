@@ -1,0 +1,121 @@
+# 京东 店铺配置（京麦工作台 shop.jd.com）
+# platform: jingdong 对应 JingdongListingSkill（iframe + 三级类目 + SKU 矩阵 + 承诺函）
+# 敏感字段用 ${VAR} 引用环境变量，禁止明文入库。
+
+shop_id: "shop_jingdong"
+shop_name: "京东示例店铺"
+platform: "jingdong"
+base_url: "https://shop.jd.com"
+
+account:
+  username: "${JD_ACCOUNT}"
+  password: "${JD_PWD}"
+
+fingerprint:
+  profile_dir: "data_persist/browser_profiles/shop_jingdong"
+
+proxy:
+  server: "${PROXY_SERVER}"
+  username: "${PROXY_USER}"
+  password: "${JD_PROXY_PWD}"
+
+price_strategy:
+  base: 0.0
+  markup_ratio: 1.45                     # 京东客单价高，加价略大
+  promo: null
+
+feishu_notify:
+  chat_id: "${FEISHU_CHAT_ID}"
+  operator_id: "${FEISHU_OPERATOR_ID}"
+
+selectors:
+  login_url_pattern: "/login"
+  home_path: "/index"
+  sms_input: "input[name=smscode]"
+  sms_send_btn: "#sendSmsBtn"
+  sms_submit: "#submitBtn"
+  slider_canvas: ".captcha-canvas"
+  slider_handle: ".slider-btn"
+  slider_piece: ".slider-piece"
+
+  # 登录流程（京东 passport.jd.com）
+  login:
+    url: "https://passport.jd.com/new/login.aspx"
+    switch_tab_sel: "text=账号登录"
+    username_sel: "input[name=loginname]"
+    password_sel: "input[name=nloginpwd]"
+    submit_sel: "div.login-btn"
+
+  # 风控信号检测
+  risk:
+    restriction_selectors:
+      - ".shop-frozen-banner"
+      - ".account-limited-tip"
+      - ".risk-warning-dialog"
+    restriction_texts:
+      - "店铺已被冻结"
+      - "账号已被限制"
+      - "存在异常行为"
+      - "请验证身份"
+
+  # 上架流程配置（JingdongListingSkill 读取）
+  listing:
+    # 京麦发布表单在 content iframe 内
+    form_iframe: "iframe[name=content-iframe], iframe.publish-frame"
+    publish_path: "/seller/publish"
+    list_path: "/seller/goods/list"
+
+    # 类目三级联动
+    category:
+      level_selectors:
+        - ".cat-level-1 .cat-item"
+        - ".cat-level-2 .cat-item"
+        - ".cat-level-3 .cat-item"
+      next_btn: ".cat-next-btn"
+      value: "服装/男装/T恤"
+
+    fields:
+      title:
+        selector: "input[name=title]"
+        type: "input"
+        max: 50                          # 京东标题 50 字
+      sellpoint:
+        selector: "textarea[name=adword]"
+        type: "textarea"
+        max: 100
+      detail:
+        selector: "textarea[name=desc]"
+        type: "textarea"
+        max: 5000
+      image_upload:
+        main:
+          selector: "input[type=file][accept*=image]"
+          multiple: true
+        detail:
+          selector: ".detail-upload input[type=file]"
+          multiple: true
+
+    # SKU 矩阵：颜色 + 尺码两维自动笛卡尔积
+    sku:
+      add_spec_btn: "#addSkuSpec"
+      spec_name_1: "input.sku-spec-name-1"
+      spec_name_2: "input.sku-spec-name-2"
+      spec_values_1: "input.sku-spec-values-1"
+      spec_values_2: "input.sku-spec-values-2"
+      spec_names: ["颜色", "尺码"]
+      price: "input.sku-price"
+      stock: "input.sku-stock"
+
+    shipping:
+      selector: "#freight-tpl"
+      value: "默认运费模板"
+
+    submit_btn: "button[data-action=submit]"
+    # 京东特有：承诺函勾选 + 二次确认弹窗
+    agree_checkbox: "#promise-checkbox"
+    confirm_btn: ".confirm-publish-btn"
+    list_verify:
+      item_row: ".goods-row"
+      item_title: ".goods-title"
+      item_status: ".goods-status"
+      success_status: "上架中"
